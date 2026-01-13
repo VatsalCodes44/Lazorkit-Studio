@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWallet } from '@/lib/wallet-context';
+import { useWallet } from '@lazorkit/wallet';
 import { Button } from '@/components/ui/button';
 import { DebugPanel } from '@/components/DebugPanel';
 import { EducationalCard } from '@/components/EducationalCard';
@@ -10,7 +10,7 @@ import { Bug, Send, Code, Wallet, Zap, RotateCw } from 'lucide-react';
 
 export default function Debug() {
   const navigate = useNavigate();
-  const { wallet } = useWallet();
+  const wallet = useWallet();
   const [isProcessing, setIsProcessing] = useState(false);
   const [txResult, setTxResult] = useState<TransactionResult | null>(null);
   const [customMessage, setCustomMessage] = useState('Hello from LazorKit! 🚀');
@@ -22,17 +22,17 @@ export default function Debug() {
   }, [wallet.isConnected, navigate]);
 
   const sendTransaction = async () => {
-    if (isProcessing || !wallet.smartWalletAddress) return;
+    if (isProcessing || !wallet.wallet.smartWallet) return;
 
     setIsProcessing(true);
     setTxResult(null);
 
     try {
-      const memoInstruction = buildMemoInstruction(customMessage, wallet.smartWalletAddress);
+      const memoInstruction = buildMemoInstruction(customMessage, wallet.wallet.smartWallet);
       const result = await simulateTransaction(
         [memoInstruction],
-        wallet.smartWalletAddress,
-        wallet.feeMode
+        wallet.wallet.smartWallet,
+        "paymaster"
       );
       setTxResult(result);
     } finally {
@@ -96,7 +96,7 @@ export default function Debug() {
                       Signing Authority
                     </div>
                     <code className="text-xs font-mono text-foreground">
-                      {wallet.smartWalletAddress?.slice(0, 16)}...
+                      {wallet.wallet.smartWallet?.slice(0, 16)}...
                     </code>
                   </div>
 

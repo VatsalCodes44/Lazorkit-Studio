@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWallet } from '@/lib/wallet-context';
+import { useWallet } from '@lazorkit/wallet';
 import { Button } from '@/components/ui/button';
 import { simulateFailedTransaction, TransactionResult } from '@/lib/tx-utils';
 import { getErrorExplanation } from '@/lib/debug-utils';
-import { 
-  AlertTriangle, 
-  Key, 
-  ListOrdered, 
-  CreditCard, 
-  XCircle, 
+import {
+  AlertTriangle,
+  Key,
+  ListOrdered,
+  CreditCard,
+  XCircle,
   Lightbulb,
   RotateCw,
   AlertCircle
@@ -46,7 +46,7 @@ type FailureType = typeof FAILURE_SCENARIOS[number]['id'];
 
 export default function SimulateFailure() {
   const navigate = useNavigate();
-  const { wallet } = useWallet();
+  const wallet = useWallet();
   const [selectedScenario, setSelectedScenario] = useState<FailureType | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [txResult, setTxResult] = useState<TransactionResult | null>(null);
@@ -101,22 +101,21 @@ export default function SimulateFailure() {
             <div className="space-y-6">
               <div className="glass rounded-2xl p-6 animate-fade-in">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Choose a Failure Scenario</h3>
-                
+
                 <div className="space-y-3">
                   {FAILURE_SCENARIOS.map((scenario) => {
                     const isActive = selectedScenario === scenario.id;
                     const Icon = scenario.icon;
-                    
+
                     return (
                       <button
                         key={scenario.id}
                         onClick={() => simulateFailure(scenario.id)}
                         disabled={isProcessing}
-                        className={`w-full p-4 rounded-xl text-left transition-all ${
-                          isActive
+                        className={`w-full p-4 rounded-xl text-left transition-all ${isActive
                             ? 'bg-secondary ring-2 ring-primary'
                             : 'bg-secondary/50 hover:bg-secondary/80'
-                        } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <div className="flex items-start gap-3">
                           <div className={`w-10 h-10 rounded-lg ${scenario.bgColor} flex items-center justify-center shrink-0`}>

@@ -1,27 +1,72 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useWallet } from '@/lib/wallet-context';
 import { Button } from '@/components/ui/button';
 import { EducationalCard } from '@/components/EducationalCard';
 import { EDUCATIONAL_CONTENT } from '@/lib/debug-utils';
 import { StatusBadge } from '@/components/StatusBadge';
-import { 
-  Wallet, 
-  Copy, 
-  Check, 
-  Globe, 
-  Zap, 
-  Shield, 
+import {
+  Wallet,
+  Copy,
+  Check,
+  Globe,
+  Zap,
+  Shield,
   ArrowRight,
   ExternalLink,
   Fingerprint,
   CheckCircle2
 } from 'lucide-react';
+import { CodeBlock } from '@/components/ui/code-block';
+import { useWallet } from '@lazorkit/wallet';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { wallet } = useWallet();
-  const [copied, setCopied] = useState<'wallet' | 'pubkey' | null>(null);
+  const wallet = useWallet();
+  const [copied, setCopied] = useState(false);
+
+  const appTsx =
+    `import { LazorkitProvider } from '@lazorkit/wallet';
+
+const CONFIG = {
+  RPC_URL: "https://api.devnet.solana.com",
+  PORTAL_URL: "https://portal.lazor.sh",
+  PAYMASTER: { 
+    paymasterUrl: "https://kora.devnet.lazorkit.com" 
+  }
+};
+
+export default function App() {
+  return (
+    <LazorkitProvider
+      rpcUrl={CONFIG.RPC_URL}
+      portalUrl={CONFIG.PORTAL_URL}
+      paymasterConfig={CONFIG.PAYMASTER}
+    >
+      <MainContent />
+    </LazorkitProvider>
+  );
+}`;
+
+  const connectButtonTsx =
+    `import { useWallet } from '@lazorkit/wallet';
+
+export function ConnectButton() {
+  const { connect, disconnect, isConnected, isConnecting, wallet } = useWallet();
+
+  if (isConnected && wallet) {
+    return (
+      <button onClick={() => disconnect()}>
+        Disconnect ({wallet.smartWallet.slice(0, 6)}...)
+      </button>
+    );
+  }
+
+  return (
+    <button onClick={() => connect()} disabled={isConnecting}>
+      {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+    </button>
+  );
+}`;
 
   useEffect(() => {
     if (!wallet.isConnected) {
@@ -29,12 +74,12 @@ export default function Dashboard() {
     }
   }, [wallet.isConnected, navigate]);
 
-  const copyAddress = async (type: 'wallet' | 'pubkey') => {
-    const address = type === 'wallet' ? wallet.smartWalletAddress : wallet.publicKey;
+  const copyAddress = async () => {
+    const address = wallet.wallet.smartWallet;
     if (address) {
       await navigator.clipboard.writeText(address);
-      setCopied(type);
-      setTimeout(() => setCopied(null), 2000);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -43,7 +88,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen pt-24 pb-12">
       <div className="container mx-auto px-4">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
@@ -57,7 +102,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-4 gap-6">
             {/* Main Info Cards */}
             <div className="lg:col-span-2 space-y-6">
               {/* Smart Wallet Card */}
@@ -73,10 +118,10 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-muted-foreground">Wallet Address</span>
                       <button
-                        onClick={() => copyAddress('wallet')}
+                        onClick={() => copyAddress()}
                         className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
                       >
-                        {copied === 'wallet' ? (
+                        {copied === true ? (
                           <>
                             <Check className="w-3.5 h-3.5" />
                             Copied!
@@ -90,7 +135,7 @@ export default function Dashboard() {
                       </button>
                     </div>
                     <code className="text-sm font-mono text-foreground break-all">
-                      {wallet.smartWalletAddress}
+                      {wallet.wallet.smartWallet}
                     </code>
                   </div>
 
@@ -101,7 +146,7 @@ export default function Dashboard() {
                         <Globe className="w-4 h-4" />
                         <span className="text-sm">Network</span>
                       </div>
-                      <p className="font-medium text-foreground capitalize">{wallet.network}</p>
+                      <p className="font-medium text-foreground capitalize">Devnet</p>
                     </div>
 
                     <div className="p-4 rounded-xl bg-secondary/50">
@@ -109,7 +154,7 @@ export default function Dashboard() {
                         <Zap className="w-4 h-4" />
                         <span className="text-sm">Fee Mode</span>
                       </div>
-                      <p className="font-medium text-foreground capitalize">{wallet.feeMode}</p>
+                      <p className="font-medium text-foreground capitalize">Paymaster</p>
                       <p className="text-xs text-success">Gasless</p>
                     </div>
                   </div>
@@ -150,6 +195,20 @@ export default function Dashboard() {
                 </ul>
               </div>
 
+              <div className="space-y-6">
+                <EducationalCard
+                  title={EDUCATIONAL_CONTENT.smartWallet.title}
+                  points={EDUCATIONAL_CONTENT.smartWallet.points}
+                  icon={<Wallet className="w-5 h-5 text-primary" />}
+                />
+
+                <EducationalCard
+                  title={EDUCATIONAL_CONTENT.paymaster.title}
+                  points={EDUCATIONAL_CONTENT.paymaster.points}
+                  icon={<Zap className="w-5 h-5 text-primary" />}
+                />
+              </div>
+
               {/* Next Steps */}
               <div className="glass rounded-2xl p-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
                 <h3 className="font-semibold text-foreground mb-4">What's Next?</h3>
@@ -180,18 +239,23 @@ export default function Dashboard() {
             </div>
 
             {/* Sidebar: Educational Content */}
-            <div className="space-y-6">
-              <EducationalCard
-                title={EDUCATIONAL_CONTENT.smartWallet.title}
-                points={EDUCATIONAL_CONTENT.smartWallet.points}
-                icon={<Wallet className="w-5 h-5 text-primary" />}
-              />
-
-              <EducationalCard
-                title={EDUCATIONAL_CONTENT.paymaster.title}
-                points={EDUCATIONAL_CONTENT.paymaster.points}
-                icon={<Zap className="w-5 h-5 text-primary" />}
-              />
+            <div className="space-y-6 lg:col-span-2">
+              <div className='glass rounded-2xl transition-all duration-300 hover:border-primary/30'>
+                <CodeBlock
+                  language="jsx"
+                  filename="App.tsx"
+                  highlightLines={[1, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 19]}
+                  code={appTsx}
+                />
+              </div>
+              <div className='glass rounded-2xl transition-all duration-300 hover:border-primary/30'>
+                <CodeBlock
+                  language="jsx"
+                  filename="ConnectButton.tsx"
+                  highlightLines={[1, 4, 6, 7, 8, 9, 10, 15, 16, 16]}
+                  code={connectButtonTsx}
+                />
+              </div>
             </div>
           </div>
         </div>

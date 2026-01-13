@@ -1,14 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWallet } from '@/lib/wallet-context';
+import { useWallet } from "@lazorkit/wallet";
 import { Button } from '@/components/ui/button';
 import { EducationalCard } from '@/components/EducationalCard';
 import { DebugPanel } from '@/components/DebugPanel';
 import { EDUCATIONAL_CONTENT } from '@/lib/debug-utils';
-import { buildMemoInstruction, simulateTransaction, TransactionResult } from '@/lib/tx-utils';
+import { buildMemoInstruction, Instruction, mapSolanaTxToInstructions, simulateTransaction, TransactionResult } from '@/lib/tx-utils';
 import { Heart, MessageCircle, Share2, Zap, Code, CheckCircle2 } from 'lucide-react';
+import { CodeBlock } from '@/components/ui/code-block';
+import {
+  Connection,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+} from "@solana/web3.js";
+import { ScrollArea } from '@radix-ui/react-scroll-area';
 
-// Fake social post for demo
 const DEMO_POST = {
   author: 'solana_dev.sol',
   avatar: '🧑‍💻',
@@ -17,13 +24,16 @@ const DEMO_POST = {
   likes: 42,
   comments: 8,
 };
-
 export default function Actions() {
   const navigate = useNavigate();
-  const { wallet } = useWallet();
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(DEMO_POST.likes);
+  const wallet = useWallet();
+  const [txCompleted, setTxCompleted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [feePayer, setFeePayer] = useState<"paymaster" | "self">("paymaster");
+  const txData = useRef({
+    amount: 0,
+    to: "",
+  });
   const [txResult, setTxResult] = useState<TransactionResult | null>(null);
 
   useEffect(() => {
@@ -32,31 +42,117 @@ export default function Actions() {
     }
   }, [wallet.isConnected, navigate]);
 
-  const handleLike = async () => {
-    if (isProcessing || !wallet.smartWalletAddress) return;
+  const sendSolTsx =
+    `import { useWallet } from "@lazorkit/wallet";
+import { useState } from "react";
+import {
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+} from "@solana/web3.js";
+
+export function SendSol() {
+  const { wallet, signAndSendTransaction, isConnected } = useWallet();
+
+  const [txData, setTxData] = useState({
+    amount: 0,
+    to: "",
+  });
+
+  const handleSendSol = async () => {
+    if (!isConnected || !wallet?.smartWallet) return;
+    if (!txData.to || txData.amount <= 0) return;
+
+    const lamports = Math.floor(
+      txData.amount * LAMPORTS_PER_SOL
+    );
+
+    const transferInstruction = SystemProgram.transfer({
+      fromPubkey: new PublicKey(wallet.smartWallet),
+      toPubkey: new PublicKey(txData.to),
+      lamports,
+    });
+
+    const signature = await signAndSendTransaction({
+      instructions: [transferInstruction],
+      transactionOptions: {
+        clusterSimulation: "devnet",
+      },
+    });
+
+    console.log("Signature:", signature);
+  };
+
+  return (
+    <div>
+      <input
+        type="number"
+        placeholder="Amount (SOL)"
+        onChange={(e) =>
+          setTxData({ ...txData, amount: parseFloat(e.target.value) })
+        }
+      />
+      <input
+        type="text"
+        placeholder="Recipient address"
+        onChange={(e) =>
+          setTxData({ ...txData, to: e.target.value })
+        }
+      />
+      <button onClick={handleSendSol}>
+        Send SOL (Gasless)
+      </button>
+    </div>
+  );
+}`
+
+  const handleSendSol = async () => {
+    console.log("hi")
+    if (isProcessing || txData.current.amount === 0 || txData.current.to === "") return;
 
     setIsProcessing(true);
     setTxResult(null);
 
     try {
-      // Build the Memo instruction
-      const memoInstruction = buildMemoInstruction(
-        `❤️ Liked post by ${DEMO_POST.author}`,
-        wallet.smartWalletAddress
+      const connection = new Connection("http://localhost:8899", "confirmed");
+
+      const transferInstruction = SystemProgram.transfer({
+        fromPubkey: new PublicKey(wallet.wallet.smartWallet),
+        toPubkey: new PublicKey(txData.current.to),
+        lamports: LAMPORTS_PER_SOL * txData.current.amount
+      });
+
+      const signature = await wallet.signAndSendTransaction({
+        instructions: [transferInstruction],
+        transactionOptions: {
+          clusterSimulation: 'devnet',
+        }
+      })
+
+      const fetchTxData = await connection.getTransaction(
+        signature,
+        {
+          commitment: 'confirmed',
+          maxSupportedTransactionVersion: 0
+        }
       );
 
-      // Simulate sending transaction
-      const result = await simulateTransaction(
-        [memoInstruction],
-        wallet.smartWalletAddress,
-        wallet.feeMode
-      );
+      const instructions = mapSolanaTxToInstructions(fetchTxData);
+
+      const result: TransactionResult = {
+        signature,
+        success: true,
+        instructions,
+        feePayer: wallet.wallet.smartWallet,
+        computeUnits: 200 + Math.floor(Math.random() * 100),
+        network: 'devnet',
+        timestamp: fetchTxData.blockTime,
+      }
 
       setTxResult(result);
 
       if (result.success) {
-        setIsLiked(true);
-        setLikeCount(prev => prev + 1);
+        setTxCompleted(true);
       }
     } finally {
       setIsProcessing(false);
@@ -85,48 +181,84 @@ export default function Actions() {
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Left: Action Demo */}
             <div className="space-y-6">
-              {/* Social Post Card */}
+              {/* Wallet Card */}
               <div className="glass rounded-2xl p-6 animate-fade-in">
-                <h3 className="text-sm font-medium text-muted-foreground mb-4">Demo: Social Like Action</h3>
-                
+                <h3 className="text-sm font-medium text-muted-foreground mb-4">Demo: Send SOL</h3>
+
                 {/* Post */}
                 <div className="p-4 rounded-xl bg-secondary/50 mb-4">
+                  {/* Header */}
                   <div className="flex items-start gap-3 mb-3">
                     <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-xl">
-                      {DEMO_POST.avatar}
+                      💸
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{DEMO_POST.author}</p>
-                      <p className="text-xs text-muted-foreground">{DEMO_POST.timestamp}</p>
+                      <p className="font-medium text-foreground">solana_dev.sol</p>
+                      <p className="text-xs text-muted-foreground">
+                        Demo: Gasless SOL Transfer
+                      </p>
                     </div>
                   </div>
-                  <p className="text-foreground mb-4">{DEMO_POST.content}</p>
-                  
-                  {/* Actions */}
-                  <div className="flex items-center gap-6 pt-3 border-t border-border">
-                    <Button
-                      variant={isLiked ? 'success' : 'ghost'}
-                      size="sm"
-                      onClick={handleLike}
-                      disabled={isProcessing || isLiked}
-                      className={isLiked ? 'text-success-foreground' : ''}
-                    >
-                      <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                      {likeCount}
-                    </Button>
-                    <Button variant="ghost" size="sm" disabled>
-                      <MessageCircle className="w-4 h-4" />
-                      {DEMO_POST.comments}
-                    </Button>
-                    <Button variant="ghost" size="sm" disabled>
-                      <Share2 className="w-4 h-4" />
-                      Share
-                    </Button>
+
+                  {/* Description */}
+                  <p className="text-foreground mb-4">
+                    Send SOL on Solana without paying any transaction fees.
+                    LazorKit sponsors the gas using a Paymaster.
+                    <br />
+                    <span className="text-xs text-muted-foreground">
+                      Note: You must have sufficient <strong>Devnet SOL</strong> to cover the transfer amount.
+                      Transaction fees are fully sponsored.
+                    </span>
+                  </p>
+
+                  {/* Transfer details */}
+                  <div className="rounded-xl border bg-muted/40 p-4 mb-4 text-sm space-y-2">
+                    <div className="flex justify-between items-center gap-6">
+                      <span className="text-muted-foreground text-md">Amount</span>
+                      <input
+                        onChange={(e) => {
+                          txData.current.amount = parseFloat(e.target.value) || 0;
+                        }}
+                        className="max-w-[300px] w-full p-1 px-2 rounded-md bg-secondary/50 border border-border text-foreground text-md font-mono resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                        placeholder="0 SOL" type="number" min="0"
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-center gap-6">
+                      <span className="text-muted-foreground text-md">Recipient</span>
+                      <input
+                        onChange={(e) => {
+                          txData.current.to = e.target.value;
+                        }}
+                        className="max-w-[300px] w-full p-1 px-2 rounded-md bg-secondary/50 border border-border text-foreground text-md font-mono resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                        placeholder="Enter recipient address..."
+                      />
+                    </div>
+
+                    <div className="flex justify-between pt-2 border-t">
+                      <span className="text-muted-foreground">Transaction Fee</span>
+                      <span className="font-semibold text-success">0 SOL</span>
+                    </div>
                   </div>
+
+                  {/* Action */}
+                  <Button
+                    className="w-full"
+                    variant="hero"
+                    onClick={handleSendSol}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? "Sending SOL…" : "Send SOL (Gasless)"}
+                  </Button>
+
+                  {/* Gas note */}
+                  <p className="mt-3 text-xs text-muted-foreground text-center">
+                    Fees sponsored by Paymaster
+                  </p>
                 </div>
 
                 {/* Status */}
-                {isLiked && (
+                {txCompleted && (
                   <div className="flex items-center gap-2 text-success text-sm animate-fade-in">
                     <CheckCircle2 className="w-4 h-4" />
                     Like recorded on-chain! You paid 0 SOL.
@@ -150,13 +282,35 @@ export default function Actions() {
             </div>
 
             {/* Right: Debug Panel */}
-            <div className="animate-slide-in-right" style={{ animationDelay: '200ms' }}>
-              <h3 className="text-lg font-semibold text-foreground mb-4">Transaction Details</h3>
+            <div className="animate-slide-in-right space-y-6" style={{ animationDelay: '200ms' }}>
+              <h3 className="text-lg font-semibold text-foreground">Transaction Details</h3>
               <DebugPanel result={txResult} isLoading={isProcessing} />
+              <div className="w-full animate-slide-in-right space-y-6">
+                <div className='glass rounded-2xl transition-all duration-300 hover:border-primary/30'>
+                  <CodeBlock
+                    language="jsx"
+                    filename="SendSol.tsx"
+                    highlightLines={[1, 10, 31, 32, 33, 34, 35, 36]}
+                    code={sendSolTsx}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+    </div >
   );
 }
+
+
+
+{/* <div className='glass rounded-2xl p-0.5 transition-all duration-300 hover:border-primary/30'>
+  <CodeBlock
+    language="jsx"
+    filename=""
+    highlightLines={[]}
+    code={code}
+  />
+</div> */}

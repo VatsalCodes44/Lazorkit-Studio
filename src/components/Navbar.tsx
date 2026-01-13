@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useWallet } from '@/lib/wallet-context';
+import { useWallet } from "@lazorkit/wallet";
 import { Button } from '@/components/ui/button';
 import { Fingerprint, LayoutDashboard, Zap, Bug, AlertTriangle, LogOut } from 'lucide-react';
 
@@ -12,10 +12,10 @@ const navItems = [
 
 export function Navbar() {
   const location = useLocation();
-  const { wallet, disconnect } = useWallet();
+  const wallet = useWallet();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-strong">
+    <nav className="fixed top-0 inset-x-0 right-0 z-50 glass-strong">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -58,21 +58,16 @@ export function Navbar() {
                 <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50">
                   <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
                   <span className="text-xs font-mono text-muted-foreground">
-                    {wallet.smartWalletAddress?.slice(0, 4)}...{wallet.smartWalletAddress?.slice(-4)}
+                    {wallet.wallet.smartWallet?.slice(0, 4)}...{wallet.wallet.smartWallet?.slice(-4)}
                   </span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={disconnect}>
+                <Button variant="ghost" size="sm" onClick={wallet.disconnect}>
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">Disconnect</span>
                 </Button>
               </>
             ) : (
-              <Link to="/login">
-                <Button variant="hero" size="sm">
-                  <Fingerprint className="w-4 h-4" />
-                  Connect
-                </Button>
-              </Link>
+              <div></div>
             )}
           </div>
         </div>

@@ -66,13 +66,12 @@ export function buildMemoInstruction(message: string, authority: string): Instru
 }
 
 // Simulate sending a transaction
-export async function simulateTransaction(
+export function simulateTransaction(
   instructions: Instruction[],
   smartWallet: string,
   feeMode: 'paymaster' | 'self'
-): Promise<TransactionResult> {
+): TransactionResult {
   // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
 
   const paymasterAddress = 'LzrPay1111111111111111111111111111111111111';
 
@@ -113,4 +112,59 @@ export async function simulateFailedTransaction(
 
 export function getExplorerUrl(signature: string, network: string = 'devnet'): string {
   return `https://explorer.solana.com/tx/${signature}?cluster=${network}`;
+}
+
+
+import {
+  SystemProgram,
+  PublicKey,
+  SystemInstruction,
+} from "@solana/web3.js";
+
+export function mapSolanaTxToInstructions(tx: any): Instruction[] {
+  if (!tx) return [];
+
+  const message = tx.transaction.message;
+  const accountKeys = message.accountKeys;
+
+  return message.instructions.map((ix: any) => {
+    const programId = accountKeys[ix.programIdIndex].toBase58();
+
+    const accounts: AccountMeta[] = ix.accounts.map((accIndex: number) => {
+      const pubkey = accountKeys[accIndex].toBase58();
+
+      return {
+        pubkey,
+        isSigner: false,        // Solana compiled ix does not expose signer here
+        isWritable: true,       // safe default for UI
+        role:
+          programId === SystemProgram.programId.toBase58()
+            ? "system"
+            : "data",
+      };
+    });
+
+    // Try to decode System Program transfer
+    let dataDecoded: string | undefined;
+    let programName = "Unknown Program";
+
+    if (programId === SystemProgram.programId.toBase58()) {
+      programName = "System Program";
+
+      try {
+        const decoded = SystemInstruction.decodeTransfer(ix);
+        dataDecoded = `Transfer ${Number(decoded.lamports) / 1e9} SOL`;
+      } catch {
+        dataDecoded = "System instruction";
+      }
+    }
+
+    return {
+      programId,
+      programName,
+      accounts,
+      data: ix.data, // base64
+      dataDecoded,
+    };
+  });
 }

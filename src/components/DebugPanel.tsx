@@ -10,6 +10,7 @@ interface DebugPanelProps {
 }
 
 export function DebugPanel({ result, isLoading }: DebugPanelProps) {
+  console.log(result);
   if (isLoading) {
     return (
       <div className="glass rounded-2xl p-8 flex flex-col items-center justify-center min-h-[400px]">
@@ -21,7 +22,7 @@ export function DebugPanel({ result, isLoading }: DebugPanelProps) {
 
   if (!result) {
     return (
-      <div className="glass rounded-2xl p-8 flex flex-col items-center justify-center min-h-[400px] text-center">
+      <div className="glass rounded-2xl p-8 flex flex-col items-center justify-center min-h-[400px] text-center mb-4">
         <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
           <Cpu className="w-8 h-8 text-muted-foreground" />
         </div>

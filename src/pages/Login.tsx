@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWallet } from '@/lib/wallet-context';
 import { Button } from '@/components/ui/button';
 import { EducationalCard } from '@/components/EducationalCard';
 import { EDUCATIONAL_CONTENT } from '@/lib/debug-utils';
 import { Fingerprint, Loader2, Shield, Key, Smartphone, ArrowRight, Wallet } from 'lucide-react';
+import { useWallet } from '@lazorkit/wallet';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { wallet, connect, isConnecting } = useWallet();
+  const wallet = useWallet();
 
   useEffect(() => {
     if (wallet.isConnected) {
@@ -17,16 +17,16 @@ export default function Login() {
   }, [wallet.isConnected, navigate]);
 
   const handleConnect = async () => {
-    await connect();
+    await wallet.connect();
   };
 
   return (
     <div className="min-h-screen pt-16 flex items-center">
-      <div className="container mx-auto px-4 py-12">
+      <div className=" mx-auto px-4 py-12">
         <div className="max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Login Card */}
-            <div className="order-2 lg:order-1">
+            <div className="order-1 lg:order-1">
               <div className="glass rounded-3xl p-8 md:p-12 text-center max-w-md mx-auto">
                 {/* Icon */}
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-cyan-400 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-primary/30 animate-float">
@@ -51,9 +51,9 @@ export default function Login() {
                   size="xl"
                   className="w-full"
                   onClick={handleConnect}
-                  disabled={isConnecting}
+                  disabled={wallet.isConnecting}
                 >
-                  {isConnecting ? (
+                  {wallet.isConnecting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
                       Creating your wallet...
@@ -68,7 +68,7 @@ export default function Login() {
                 </Button>
 
                 {/* Loading State Info */}
-                {isConnecting && (
+                {wallet.isConnecting && (
                   <div className="mt-6 p-4 rounded-xl bg-secondary/50 animate-fade-in">
                     <p className="text-sm text-muted-foreground">
                       Creating or restoring your smart wallet on Solana Devnet...
