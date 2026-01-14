@@ -101,7 +101,7 @@ Transaction is broken into deterministic steps:
 | Blockchain | Solana |
 | Auth | WebAuthn (Passkeys) |
 | UX | Gasless Transactions |
-| Deployment | Vercel |
+| Deployment |AWS S3, CDN |
 
 ---
 
