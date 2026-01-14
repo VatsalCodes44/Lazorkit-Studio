@@ -101,12 +101,12 @@ Transaction is broken into deterministic steps:
 | Blockchain | Solana |
 | Auth | WebAuthn (Passkeys) |
 | UX | Gasless Transactions |
-| Deployment | Vercel |
+| Deployment |AWS S3, CDN |
 
 ---
 
 ## 📂 Project Structure
-
+```
 lazorkit-studio/
 ├── src/
 │   ├── pages/              # App routes (Login, Actions, Debug)
@@ -117,7 +117,7 @@ lazorkit-studio/
 ├── public/
 └── README.md
 
----
+```
 
 
 ## 🚀 Getting Started (Local)
