@@ -106,7 +106,7 @@ Transaction is broken into deterministic steps:
 ---
 
 ## 📂 Project Structure
-
+```
 lazorkit-studio/
 ├── src/
 │   ├── pages/              # App routes (Login, Actions, Debug)
@@ -117,7 +117,7 @@ lazorkit-studio/
 ├── public/
 └── README.md
 
----
+```
 
 
 ## 🚀 Getting Started (Local)
