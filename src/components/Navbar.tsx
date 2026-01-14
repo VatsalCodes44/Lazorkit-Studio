@@ -23,7 +23,7 @@ export function Navbar() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-cyan-400 flex items-center justify-center shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-shadow">
               <Fingerprint className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-semibold text-lg">
+            <span className="font-semibold text-lg hidden sm:inline">
               <span className="text-gradient-primary">LazorKit</span>
               <span className="text-foreground pl-2">Studio</span>
             </span>
