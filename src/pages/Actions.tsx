@@ -127,7 +127,7 @@ export function SendSol() {
       );
 
       const transferInstruction = SystemProgram.transfer({
-        fromPubkey: new PublicKey(wallet.wallet.smartWallet),
+        fromPubkey: wallet.smartWalletPubkey,
         toPubkey: new PublicKey(txData.current.to),
         lamports,
       });

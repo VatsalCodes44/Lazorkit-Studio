@@ -202,7 +202,7 @@ function ProofSnapshot({ tx }: { tx: TransactionResult }) {
 // ============================================
 
 function GaslessVerification({ tx }: { tx: TransactionResult }) {
-  const networkFee = 0.00001;
+  const networkFee = 0.000005;
 
   return (
     <section className="mb-10">
