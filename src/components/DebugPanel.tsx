@@ -80,7 +80,7 @@ export function DebugPanel({ result, isLoading }: DebugPanelProps) {
                 Timestamp
               </div>
               <p className="text-sm font-mono text-foreground">
-                result.timestamp
+                {result.timestamp}
               </p>
             </div>
           </div>

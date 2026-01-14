@@ -286,7 +286,7 @@ export function SendSol() {
                 {txCompleted && (
                   <div className="flex items-center gap-2 text-success text-sm animate-fade-in">
                     <CheckCircle2 className="w-4 h-4" />
-                    Like recorded on-chain! You paid 0 SOL.
+                    Transaction recorded on-chain! You paid 0 Fees.
                   </div>
                 )}
               </div>
