@@ -24,7 +24,6 @@ export function AccountMetaRow({ account }: AccountMetaRowProps) {
 
   const roleColors: Record<string, string> = {
     payer: 'bg-success/20 text-success',
-    authority: 'bg-primary/20 text-primary',
     program: 'bg-accent/20 text-accent',
     data: 'bg-warning/20 text-warning',
     system: 'bg-muted text-muted-foreground',
@@ -38,7 +37,6 @@ export function AccountMetaRow({ account }: AccountMetaRowProps) {
           <div
             className={cn(
               'px-2 py-0.5 rounded text-xs font-medium capitalize cursor-help flex items-center gap-1',
-              roleColors[account.role]
             )}
           >
             {account.role}

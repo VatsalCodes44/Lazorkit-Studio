@@ -14,14 +14,14 @@ export function Footer() {
 
                     <div className="flex items-center gap-4">
                         <a
-                            href="https://github.com/VatsalCodes44/Lazorkit-Playground"
+                            href="https://github.com/VatsalCodes44/Lazorkit-Studio"
                             className="w-10 h-10 rounded-lg glass-card flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition-all hover:scale-105"
                             aria-label="GitHub"
                         >
                             <Github className="w-5 h-5" />
                         </a>
                         <a
-                            href="#"
+                            href="https://x.com/mahajan_vatsal_"
                             className="w-10 h-10 rounded-lg glass-card flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition-all hover:scale-105"
                             aria-label="Twitter"
                         >

@@ -80,7 +80,7 @@ export function DebugPanel({ result, isLoading }: DebugPanelProps) {
                 Timestamp
               </div>
               <p className="text-sm font-mono text-foreground">
-                {new Date(result.timestamp).toLocaleTimeString()}
+                result.timestamp
               </p>
             </div>
           </div>

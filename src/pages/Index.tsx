@@ -33,7 +33,7 @@ export default function Index() {
         {/* Background Effects */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(187_94%_43%/0.15),transparent_50%)]" />
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
-        
+
         <div className="container mx-auto px-4 py-24 md:py-32 relative">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
@@ -52,7 +52,7 @@ export default function Index() {
 
             {/* Subtitle */}
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in" style={{ animationDelay: '200ms' }}>
-              LazorKit enables seedless, gasless Solana applications using passkeys. 
+              LazorKit enables seedless, gasless Solana applications using passkeys.
               This playground demonstrates how it all works under the hood.
             </p>
 
@@ -126,12 +126,11 @@ export default function Index() {
                 {['User', 'Passkey', 'LazorKit', 'Smart Wallet'].map((step, index) => (
                   <div key={step} className="flex items-center gap-4">
                     <div className="flex flex-col items-center">
-                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
-                        index === 0 ? 'bg-primary/20' :
-                        index === 1 ? 'bg-accent/20' :
-                        index === 2 ? 'bg-warning/20' :
-                        'bg-success/20'
-                      }`}>
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${index === 0 ? 'bg-primary/20' :
+                          index === 1 ? 'bg-accent/20' :
+                            index === 2 ? 'bg-warning/20' :
+                              'bg-success/20'
+                        }`}>
                         {index === 0 && <Shield className="w-7 h-7 text-primary" />}
                         {index === 1 && <Fingerprint className="w-7 h-7 text-accent" />}
                         {index === 2 && <Zap className="w-7 h-7 text-warning" />}
@@ -169,23 +168,6 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 border-t border-border">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Fingerprint className="w-5 h-5 text-primary" />
-              <span className="font-semibold">
-                <span className="text-gradient-primary">Lazor</span>Kit
-              </span>
-              <span className="text-muted-foreground text-sm">Developer Playground</span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Built for Solana developers • Open source
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

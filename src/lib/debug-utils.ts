@@ -6,33 +6,56 @@ export interface DebugExplanation {
   type: 'info' | 'warning' | 'success' | 'error';
 }
 
-export function getErrorExplanation(error: string): { explanation: string; fix: string } {
-  if (error.includes('Missing required signature')) {
-    return {
-      explanation: 'The transaction requires a signature from an account that was not included as a signer. In LazorKit, the smart wallet automatically signs, but if you reference other accounts that need to sign, you must include them properly.',
-      fix: 'Ensure all accounts marked as `isSigner: true` in your instruction are actually signing the transaction. Check that the authority account is correctly configured.',
-    };
-  }
+export function getErrorExplanation(
+  error: string
+): { explanation: string; fix: string } {
+
 
   if (error.includes('Invalid instruction order')) {
     return {
-      explanation: 'Solana programs often require instructions to be in a specific order. For example, you must create an account before you can write to it.',
-      fix: 'Review your instruction order. Initialization instructions (create account, allocate space) must come before operations that use those accounts.',
+      explanation:
+        'Solana programs require instructions to be executed in a strict order. For example, an account must be created and initialized before it can be used.',
+      fix:
+        'Reorder your instructions so that initialization steps (create account, allocate space, initialize) come before any instructions that depend on them.',
     };
   }
 
-  if (error.includes('Paymaster rejected')) {
+  if (
+    error.includes('compute budget') ||
+    error.includes('Compute budget exceeded') ||
+    error.includes('exceeded the compute')
+  ) {
     return {
-      explanation: 'The paymaster service refused to sponsor this transaction. This can happen if the transaction exceeds sponsored limits or if the paymaster is out of funds.',
-      fix: 'Check your paymaster configuration and balance. You may need to top up your sponsored transaction budget or switch to self-pay mode for this transaction.',
+      explanation:
+        'The transaction required more compute units than the paymaster allows for sponsored execution. To protect against abuse, paymasters enforce strict compute limits on gasless transactions.',
+      fix:
+        'Reduce compute usage by simplifying the transaction, splitting it into multiple steps, or removing unnecessary instructions.',
     };
   }
 
+
+  if (
+    error.includes('WebAuthn') ||
+    error.includes('insecure origin') ||
+    error.includes('TLS')
+  ) {
+    return {
+      explanation:
+        'Passkey signing relies on WebAuthn, which is blocked by browsers on insecure origins. This happens when the site is served over HTTP or has an invalid TLS certificate.',
+      fix:
+        'Run your app on HTTPS with a valid TLS certificate. For local development, use https://localhost or a tunneling service like ngrok or Cloudflare Tunnel.',
+    };
+  }
+
+  // Fallback
   return {
-    explanation: 'An unknown error occurred during transaction execution.',
-    fix: 'Review the full error message and check the Solana Explorer for more details.',
+    explanation:
+      'An unknown error occurred during transaction execution.',
+    fix:
+      'Check the full error logs and ensure all transaction parameters, instructions, and environment requirements are correctly configured.',
   };
 }
+
 
 export function getRoleExplanation(role: string): string {
   const explanations: Record<string, string> = {

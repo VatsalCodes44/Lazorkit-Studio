@@ -107,57 +107,82 @@ export function SendSol() {
 }`
 
   const handleSendSol = async () => {
-    console.log("hi")
-    if (isProcessing || txData.current.amount === 0 || txData.current.to === "") return;
+    if (
+      isProcessing ||
+      txData.current.amount <= 0 ||
+      !txData.current.to
+    ) return;
 
     setIsProcessing(true);
     setTxResult(null);
 
     try {
-      const connection = new Connection("http://localhost:8899", "confirmed");
+      const connection = new Connection(
+        "https://api.devnet.solana.com",
+        "confirmed"
+      );
+
+      const lamports = Math.floor(
+        txData.current.amount * LAMPORTS_PER_SOL
+      );
 
       const transferInstruction = SystemProgram.transfer({
         fromPubkey: new PublicKey(wallet.wallet.smartWallet),
         toPubkey: new PublicKey(txData.current.to),
-        lamports: LAMPORTS_PER_SOL * txData.current.amount
+        lamports,
       });
 
       const signature = await wallet.signAndSendTransaction({
         instructions: [transferInstruction],
         transactionOptions: {
-          clusterSimulation: 'devnet',
-        }
-      })
+          clusterSimulation: "devnet",
+        },
+      });
 
-      const fetchTxData = await connection.getTransaction(
-        signature,
-        {
-          commitment: 'confirmed',
-          maxSupportedTransactionVersion: 0
-        }
-      );
+      const fetchTxData = await connection.getTransaction(signature, {
+        commitment: "confirmed",
+        maxSupportedTransactionVersion: 0,
+      });
 
-      const instructions = mapSolanaTxToInstructions(fetchTxData);
+      if (!fetchTxData) {
+        throw new Error("Transaction not found on devnet");
+      }
+
+
+      // ✅ TRUE fee payer (paymaster or wallet)
+      const feePayer =
+        fetchTxData.transaction.message
+          .getAccountKeys().staticAccountKeys[0]
+          .toBase58();
+
+      const instructions = mapSolanaTxToInstructions(fetchTxData, wallet.wallet.smartWallet);
 
       const result: TransactionResult = {
         signature,
         success: true,
         instructions,
-        feePayer: wallet.wallet.smartWallet,
-        computeUnits: 200 + Math.floor(Math.random() * 100),
-        network: 'devnet',
-        timestamp: fetchTxData.blockTime,
-      }
+        feePayer,
+        computeUnits: fetchTxData.meta?.computeUnitsConsumed ?? 0,
+        network: "devnet",
+        timestamp: fetchTxData.blockTime
+      };
+
+      localStorage.setItem(
+        "lastTransaction",
+        JSON.stringify(result)
+      );
 
       setTxResult(result);
+      setTxCompleted(true);
 
-      if (result.success) {
-        setTxCompleted(true);
-      }
+    } catch (e) {
+      console.error(e);
+      console.error(wallet.error);
     } finally {
       setIsProcessing(false);
     }
   };
+
 
   if (!wallet.isConnected) return null;
 
@@ -305,12 +330,3 @@ export function SendSol() {
 }
 
 
-
-{/* <div className='glass rounded-2xl p-0.5 transition-all duration-300 hover:border-primary/30'>
-  <CodeBlock
-    language="jsx"
-    filename=""
-    highlightLines={[]}
-    code={code}
-  />
-</div> */}

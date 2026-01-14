@@ -12,14 +12,16 @@ import {
   XCircle,
   Lightbulb,
   RotateCw,
-  AlertCircle
+  AlertCircle,
+  Cpu
 } from 'lucide-react';
 
 const FAILURE_SCENARIOS = [
   {
-    id: 'missing_authority',
-    title: 'Missing Authority',
-    description: 'Simulate a transaction where a required signer is missing',
+    id: 'webauthn_insecure_origin',
+    title: 'WebAuthn Not Supported',
+    description:
+      'Signing failed because the site is not running in a secure context. Passkeys require HTTPS with a valid TLS certificate.',
     icon: Key,
     color: 'text-destructive',
     bgColor: 'bg-destructive/20',
@@ -27,20 +29,23 @@ const FAILURE_SCENARIOS = [
   {
     id: 'invalid_order',
     title: 'Invalid Instruction Order',
-    description: 'Simulate instructions in the wrong sequence',
+    description:
+      'The transaction was built with instructions in the wrong sequence. Solana programs require strict ordering.',
     icon: ListOrdered,
     color: 'text-warning',
     bgColor: 'bg-warning/20',
   },
   {
-    id: 'paymaster_rejected',
-    title: 'Paymaster Rejected',
-    description: 'Simulate a paymaster refusing to sponsor the transaction',
-    icon: CreditCard,
+    id: 'compute_budget_exceeded',
+    title: 'Compute Budget Exceeded',
+    description:
+      'The transaction required more compute units than allowed for sponsored execution, so it was rejected.',
+    icon: Cpu,
     color: 'text-accent',
     bgColor: 'bg-accent/20',
   },
 ] as const;
+
 
 type FailureType = typeof FAILURE_SCENARIOS[number]['id'];
 
@@ -113,8 +118,8 @@ export default function SimulateFailure() {
                         onClick={() => simulateFailure(scenario.id)}
                         disabled={isProcessing}
                         className={`w-full p-4 rounded-xl text-left transition-all ${isActive
-                            ? 'bg-secondary ring-2 ring-primary'
-                            : 'bg-secondary/50 hover:bg-secondary/80'
+                          ? 'bg-secondary ring-2 ring-primary'
+                          : 'bg-secondary/50 hover:bg-secondary/80'
                           } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <div className="flex items-start gap-3">

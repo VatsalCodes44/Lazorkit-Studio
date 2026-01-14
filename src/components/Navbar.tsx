@@ -24,14 +24,14 @@ export function Navbar() {
               <Fingerprint className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="font-semibold text-lg">
-              <span className="text-gradient-primary">Lazor</span>
-              <span className="text-foreground">Kit</span>
+              <span className="text-gradient-primary">LazorKit</span>
+              <span className="text-foreground pl-2">Studio</span>
             </span>
           </Link>
 
           {/* Navigation Links */}
           {wallet.isConnected && (
-            <div className="hidden md:flex items-center gap-1">
+            <div className="flex items-center gap-1">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 const Icon = item.icon;
@@ -43,7 +43,7 @@ export function Navbar() {
                       className={isActive ? 'bg-secondary' : ''}
                     >
                       <Icon className="w-4 h-4" />
-                      {item.label}
+                      <span className="hidden sm:inline">{item.label}</span>
                     </Button>
                   </Link>
                 );

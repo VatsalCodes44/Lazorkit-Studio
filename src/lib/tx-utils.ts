@@ -37,15 +37,7 @@ const generateSignature = () => {
   return result;
 };
 
-// Generate fake address
-const generateAddress = () => {
-  const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-  let result = '';
-  for (let i = 0; i < 44; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-};
+
 
 // Simulated Memo instruction
 export function buildMemoInstruction(message: string, authority: string): Instruction {
@@ -88,15 +80,21 @@ export function simulateTransaction(
 
 // Simulate failed transactions for debugging
 export async function simulateFailedTransaction(
-  errorType: 'missing_authority' | 'invalid_order' | 'paymaster_rejected'
+  errorType: 'webauthn_insecure_origin' | 'invalid_order' | 'compute_budget_exceeded'
 ): Promise<TransactionResult> {
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   const errorMessages = {
-    missing_authority: 'Error: Missing required signature for account',
-    invalid_order: 'Error: Invalid instruction order - initialization must come before usage',
-    paymaster_rejected: 'Error: Paymaster rejected transaction - insufficient sponsored balance',
+    webauthn_insecure_origin:
+      'Error: WebAuthn is not supported on insecure origins. Passkey signing requires HTTPS with a valid TLS certificate.',
+
+    invalid_order:
+      'Error: Invalid instruction order - initialization must come before usage',
+
+    compute_budget_exceeded:
+      'Error: Transaction exceeded the compute budget allowed for sponsored execution',
   };
+
 
   return {
     signature: '',
@@ -121,7 +119,7 @@ import {
   SystemInstruction,
 } from "@solana/web3.js";
 
-export function mapSolanaTxToInstructions(tx: any): Instruction[] {
+export function mapSolanaTxToInstructions(tx: any, wallet: string): Instruction[] {
   if (!tx) return [];
 
   const message = tx.transaction.message;
@@ -132,15 +130,50 @@ export function mapSolanaTxToInstructions(tx: any): Instruction[] {
 
     const accounts: AccountMeta[] = ix.accounts.map((accIndex: number) => {
       const pubkey = accountKeys[accIndex].toBase58();
+      let role: string;
+      let isSigner: boolean;
+      let isWritable: boolean;
+      if (pubkey == "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed") {
+        role = "payer";
+        isSigner = true;
+        isWritable = true;
+      }
+      else if (pubkey == wallet) {
+        role = "Smart Wallet";
+        isSigner = false;
+        isWritable = true;
+      }
+      else if (pubkey == "HtNoPxmkbXRmyvyJvyG89WmAvpq2BtSxnrGJn4PbkE7X") {
+        role = "Wallet State";
+        isSigner = false;
+        isWritable = false;
+      }
+      else if (pubkey == "F72puD2eiqMLNBw1ABEPkt1o292BpPiU9dF8TjsDFDHh") {
+        role = "Wallet Device";
+        isSigner = false;
+        isWritable = false;
+      }
+      else if (pubkey == "BiE9vSdz9MidUiyjVYsu3PG4C1fbPZ8CVPADA9jRfXw7") {
+        role = "Policy Program";
+        isSigner = false;
+        isWritable = false;
+      }
+      else if (pubkey == "HKnKzuJppKxts6mTnnBPP2jkMDr4YJiYBVsvW3hHRoGM") {
+        role = "Chunk";
+        isSigner = false;
+        isWritable = true;
+      }
+      else {
+        role = "Unknown";
+        isSigner = false;
+        isWritable = false;
+      }
 
       return {
         pubkey,
-        isSigner: false,        // Solana compiled ix does not expose signer here
-        isWritable: true,       // safe default for UI
-        role:
-          programId === SystemProgram.programId.toBase58()
-            ? "system"
-            : "data",
+        isSigner,        // Solana compiled ix does not expose signer here
+        isWritable,       // safe default for UI
+        role
       };
     });
 
