@@ -42,7 +42,7 @@ export default function App() {
       portalUrl={CONFIG.PORTAL_URL}
       paymasterConfig={CONFIG.PAYMASTER}
     >
-      <MainContent />
+      <SendSol />
     </LazorkitProvider>
   );
 }`;
@@ -67,6 +67,18 @@ export function ConnectButton() {
     </button>
   );
 }`;
+
+  const viteConfig =
+    `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react(),
+  nodePolyfills()],
+})
+`
 
   useEffect(() => {
     if (!wallet.isConnected) {
@@ -240,6 +252,14 @@ export function ConnectButton() {
 
             {/* Sidebar: Educational Content */}
             <div className="space-y-6 lg:col-span-2">
+              <div className='glass rounded-2xl transition-all duration-300 hover:border-primary/30'>
+                <CodeBlock
+                  language="ts"
+                  filename="vite.config.ts"
+                  highlightLines={[3, 8]}
+                  code={viteConfig}
+                />
+              </div>
               <div className='glass rounded-2xl transition-all duration-300 hover:border-primary/30'>
                 <CodeBlock
                   language="jsx"

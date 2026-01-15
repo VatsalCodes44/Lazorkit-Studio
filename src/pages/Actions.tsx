@@ -136,6 +136,7 @@ export function SendSol() {
         instructions: [transferInstruction],
         transactionOptions: {
           clusterSimulation: "devnet",
+          computeUnitLimit: 50000
         },
       });
 
